@@ -11,8 +11,11 @@ A project capturing the camera feed and generate an ASCII rendition using VGA437
 ```
 <br />
 
-**How to:**  
-Click on the ASCII to copy the text content to your clipboard, and paste later on wherever you want.  
-You can even use it as a password.
+[Demo page HERE](https://olgv.github.io/morelittle-mirroryou/)
 
 ![](/mirroryou.jpg)
+```
+How to ?  
+Click on the ASCII to copy the text content to your clipboard, and paste later on wherever you want.  
+You can even use it as a password.
+```
