@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mirror You</title>
+    <style>
+        @font-face{ font-family: VGA437;src: url(VGA437.woff) format("woff");}
+        body,html{ height: 100%;margin: 0;display: flex;justify-content: center;align-items: center;font-family: VGA437,VT323,monospace;white-space: pre;}
+        #container{ display: flex;flex-direction: column;justify-content: center;align-items: center;text-align: left;}
+        #ascii{ white-space: pre-wrap;word-wrap: break-word;cursor: pointer;}
+        #instruction{ align-self: flex-start; display: none; /* Hide initially */}
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="ascii"></div>
+        <div id="instruction">Click on the ASCII to copy the content to clipboard.</div>
+    </div>
+    <video id="video" width="640" height="480" autoplay hidden></video>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const video = document.getElementById("video"),
+                  asciiImage = document.getElementById("ascii"),
+                  instruction = document.getElementById("instruction"),
+                  elements = document.querySelectorAll('body, html'),
+                  asciiWidth = 100,
+                  ratio = 0.55,
+                  chars = "@#S%?*+;:,.' ",
+                  canvas = document.createElement("canvas"),
+                  ctx = canvas.getContext("2d");           
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => { video.srcObject = stream; })
+                .catch(err => console.error("Something went wrong!", err));
+            ctx.imageSmoothingEnabled = false;
+            canvas.width = asciiWidth;
+            const drawAscii = () => {
+                if (!video.videoWidth) { requestAnimationFrame(drawAscii); return; }
+                const ar = video.videoWidth / video.videoHeight,
+                      h = Math.round((asciiWidth / ar) * ratio);
+                canvas.height = h;
+                ctx.clearRect(0, 0, asciiWidth, h);
+                ctx.translate(asciiWidth, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, asciiWidth, h);
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                const frame = ctx.getImageData(0, 0, asciiWidth, h).data;
+                let str = "";
+                for (let i = 0; i < frame.length; i += 4) {
+                    const b = (0.299 * frame[i] + 0.587 * frame[i + 1] + 0.114 * frame[i + 2]) / 255;
+                    str += chars[Math.floor(b * (chars.length - 1))];
+                    if ((i / 4 + 1) % asciiWidth === 0) str += "\n";
+                }
+                asciiImage.textContent = str;
+                instruction.style.display = "block";
+                requestAnimationFrame(drawAscii);
+            };
+            video.addEventListener("loadedmetadata", drawAscii);
+            asciiImage.addEventListener("click", () => {
+                if (asciiImage.textContent) {
+                    navigator.clipboard.writeText(asciiImage.textContent)
+                        .then(() => {
+                            console.log("ASCII art copied!");
+                            elements.forEach(el => el.style.backgroundColor = "grey");
+                            setTimeout(() => {
+                                elements.forEach(el => el.style.backgroundColor = "white");
+                            }, 500);
+                        })
+                        .catch(err => console.error("Copy error:", err));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
